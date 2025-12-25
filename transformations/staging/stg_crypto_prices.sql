@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS stg_crypto_prices AS
+SELECT
+    id,
+    coin_id,
+    CAST(usd_price AS NUMERIC) as usd_price,
+    CAST(ingested_at AS TIMESTAMP) AS ingested_at
+FROM raw_crypto_data;

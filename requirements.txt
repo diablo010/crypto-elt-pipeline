@@ -1,0 +1,4 @@
+coingecko-sdk
+python-dotenv
+psycopg2-binary
+apache-airflow-providers-postgres
