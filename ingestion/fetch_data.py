@@ -3,8 +3,21 @@ import os
 from coingecko_sdk import Coingecko
 import psycopg2
 import datetime
+import logging
 
 def ingest_data():
+
+    connection = psycopg2.connect(
+        database="airflow",
+        user="your_user",
+        password="your_pass",
+        host="postgres",
+        port=5432
+    )
+
+    connection.autocommit = True
+
+    cursor = connection.cursor()
 
     load_dotenv()
 
@@ -20,10 +33,14 @@ def ingest_data():
         ids=",".join(coins)     # join accepts strings not dicts
     )
 
+    logging.info("Data fetched through API")
+
     # print(coin_names)
     # print(type(coin_names))
 
     ingested_at = datetime.datetime.now()
+    logging.info("Data fetching time noted.")
+
 
     records = []
 
@@ -36,17 +53,9 @@ def ingest_data():
 
     # print(records)
 
-    connection = psycopg2.connect(
-        database="airflow",
-        user="your_user",
-        password="your_password",
-        host="postgres",
-        port=5432
-    )
-
-    cursor = connection.cursor()
-
     # cursor.execute("DROP TABLE IF EXISTS raw_crypto_data;")
+ 
+    logging.info("Creating raw_crypto_data table")
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS raw_crypto_data (
@@ -61,6 +70,8 @@ def ingest_data():
         for r in records
     ]
 
+    logging.info("Inserting records")
+
     insert_query = """
     INSERT INTO raw_crypto_data (
         coin_id, 
@@ -71,7 +82,13 @@ def ingest_data():
     """
 
     cursor.executemany(insert_query, values)    # many rows but still tuples
-    connection.commit()
+
+    logging.info("Transaction committed")
+
+    cursor.close()
+    connection.close()
+
+    logging.info("Ingestion Complete")
 
     # print(type(values))   # class 'list'
     # print(type(values[0]))   # class 'tuple'
